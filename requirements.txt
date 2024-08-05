@@ -1,4 +1,7 @@
 opentelemetry-api==1.26.0
 opentelemetry-sdk==1.26.0
 opentelemetry-exporter-otlp==1.26.0
+<<<<<<< HEAD
 opentelemetry-exporter-jaeger==1.21.0
+=======
+>>>>>>> b393116dab536a45c257b83acfd4bc8e139064b9
