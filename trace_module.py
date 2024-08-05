@@ -6,6 +6,7 @@ from opentelemetry.trace import Status, StatusCode
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 import threading
 
+
 class SimpleTracer:
     _provider_initialized = False
     _provider_lock = threading.Lock()
@@ -19,30 +20,32 @@ class SimpleTracer:
         self.tracer = trace.get_tracer(service_name)
 
     def _initialize_tracer_provider(self):
-        with self._provider_lock:
-            if not self._provider_initialized:
-                resource = Resource(attributes={
-                    SERVICE_NAME: self.service_name
-                })
-                provider = TracerProvider(resource=resource)
+        # This method ensures the provider is initialized only once
+        if not self._provider_initialized:
+            with self._provider_lock:
+                if not self._provider_initialized:
+                    resource = Resource(attributes={
+                        SERVICE_NAME: self.service_name
+                    })
+                    provider = TracerProvider(resource=resource)
 
-                # Set the tracer provider
-                trace.set_tracer_provider(provider)
+                    # Set the tracer provider
+                    trace.set_tracer_provider(provider)
 
-                # Set up the Jaeger exporter
-                jaeger_exporter = JaegerExporter(
-                    agent_host_name=self.jaeger_host,
-                    agent_port=self.jaeger_port,
-                )
-                span_processor = BatchSpanProcessor(jaeger_exporter)
-                provider.add_span_processor(span_processor)
+                    # Set up the Jaeger exporter
+                    jaeger_exporter = JaegerExporter(
+                        agent_host_name=self.jaeger_host,
+                        agent_port=self.jaeger_port,
+                    )
+                    span_processor = BatchSpanProcessor(jaeger_exporter)
+                    provider.add_span_processor(span_processor)
 
-                # Also log to console
-                console_exporter = ConsoleSpanExporter()
-                console_span_processor = BatchSpanProcessor(console_exporter)
-                provider.add_span_processor(console_span_processor)
+                    # Also log to console
+                    console_exporter = ConsoleSpanExporter()
+                    console_span_processor = BatchSpanProcessor(console_exporter)
+                    provider.add_span_processor(console_span_processor)
 
-                self._provider_initialized = True
+                    self._provider_initialized = True
 
     def log(self, span_name, func, *args, **kwargs):
         with self.tracer.start_as_current_span(span_name) as span:
